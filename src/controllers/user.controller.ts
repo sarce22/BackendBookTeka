@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { createUser, deleteUserById, findUserById, getAllUser, getLogin, getUserRolById, updateUserById } from "../service/user.service"
+import { createUser, deleteUserById, findUserById, getAllUser, getLogin, getUserRolById, updateUserById, toggleFavorite, getFavorites } from "../service/user.service"
 import handleError from "../utils/error.handle"
 import { Constants } from "../utils/constants"
 import { User } from "../interfaces/user.interface"
@@ -130,4 +130,29 @@ const updateUser = async (req: Request, res: Response) => {
 
 
 
-export { login, insertUser, validateTokenOk, checkUserRole,deleteUser, findUser,getAllUsers, updateUser }
+const toggleFavoriteCtrl = async (req: Request, res: Response) => {
+    try {
+        const { userId, isbn } = req.body;
+        const favorites = await toggleFavorite(userId, isbn);
+        if (favorites === Constants.MSG_ERROR_USUARIO_NO_ECONTRADO) {
+            return res.status(404).send({ message: 'Usuario no encontrado', error: true });
+        }
+        res.status(200).send({ favorites });
+    } catch (error) {
+        console.log(error);
+        handleError(res, Constants.MSG_ERROR_APLICACION);
+    }
+};
+
+const getFavoritesCtrl = async (req: Request, res: Response) => {
+    try {
+        const userId = req.params.id;
+        const books = await getFavorites(userId);
+        res.status(200).send(books);
+    } catch (error) {
+        console.log(error);
+        handleError(res, Constants.MSG_ERROR_APLICACION);
+    }
+};
+
+export { login, insertUser, validateTokenOk, checkUserRole,deleteUser, findUser,getAllUsers, updateUser, toggleFavoriteCtrl, getFavoritesCtrl }

@@ -1,5 +1,6 @@
 import { User } from "../interfaces/user.interface"
 import UserModel from "../models/user.model"
+import BookModel from "../models/book.model"
 import { encrypt, verify } from "../utils/bcrypt.utils"
 import { Constants } from "../utils/constants"
 import { generateToken } from "../utils/jwt.handle"
@@ -97,4 +98,38 @@ const updateUserById = async (userId: string, updatedUserData: Partial<User>) =>
 };
 
 
-export { createUser, getLogin, getUserRolById, findUserById,getAllUser, deleteUserById,updateUserById}
+const toggleFavorite = async (userId: string, isbn: string) => {
+    try {
+        const user = await UserModel.findById(userId);
+        if (!user) return Constants.MSG_ERROR_USUARIO_NO_ECONTRADO;
+
+        const favorites = user.favorites || [];
+        const index = favorites.indexOf(isbn);
+        
+        if (index > -1) {
+            favorites.splice(index, 1);
+        } else {
+            favorites.push(isbn);
+        }
+        
+        user.favorites = favorites;
+        await user.save();
+        return favorites;
+    } catch (error) {
+        throw error;
+    }
+}
+
+const getFavorites = async (userId: string) => {
+    try {
+        const user = await UserModel.findById(userId);
+        if (!user) return [];
+        
+        return await BookModel.find({ isbn: { $in: user.favorites || [] } });
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+export { createUser, getLogin, getUserRolById, findUserById,getAllUser, deleteUserById,updateUserById, toggleFavorite, getFavorites}
